@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/keihanmatcha/ogensong/main/apple-touch-icon.png">
+  <title>弦楽曲目録</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="弦楽曲目録">
+  <link href="https://fonts.googleapis.com/css2?family=Yuji+Syuku&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --main-red: #B43246;
+      --gen-ink: #16161E;       /* 墨色 */
+      --fuji-white: #EAE5F0;    /* 白藤色（背景） */
+      --card-bg: #232331;       /* カード背景 */
+      --setlist-bg: #1A1A25;    /* セトリ背景 */
+      --text-light: #F7F2FA;    /* 文字用の淡い藤色 */
+    }
+
+    body {
+      font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", sans-serif;
+      background-color: var(--fuji-white);
+      color: var(--text-light); /* 基本の文字色は白系 */
+      margin: 0;
+      padding: 0;
+    }
+
+    /* タイトル：墨色（黒）の筆文字 */
+    h1 { 
+      text-align: center; 
+      color: var(--gen-ink); 
+      font-family: 'Yuji Syuku', serif;
+      font-size: 2.5em;
+      margin: 40px 0 20px;
+      letter-spacing: 3px;
+      border-bottom: 2px solid var(--main-red);
+      display: block;
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
+      padding-bottom: 10px;
+    }
+
+    /* 右上の「サイトについて」ボタン */
+    .about-link {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      z-index: 1001;
+      background: var(--main-red);
+      color: white;
+      padding: 6px 15px;
+      border-radius: 20px;
+      font-size: 0.8em;
+      text-decoration: none;
+      font-family: 'Yuji Syuku', serif;
+      border: 1px solid var(--gen-ink);
+      transition: 0.3s;
+    }
+    .about-link:hover {
+      background: var(--gen-ink);
+      color: var(--fuji-white);
+    }
+
+    /* ローディング：墨色の筆文字 */
+    .loader { 
+      text-align: center; 
+      padding: 100px; 
+      font-family: 'Yuji Syuku', serif;
+      font-size: 1.8em; 
+      color: var(--gen-ink);
+      font-style: normal;
+    }
+
+    /* プレイヤー固定エリア */
+  #player-section {
+    position: sticky; top: 0; z-index: 1000; background: #000;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4); display: none;
+    border-bottom: 4px solid var(--main-red);
+  }
+  .player-wrapper { max-width: 1000px; margin: 0 auto; position: relative; padding-top: 56.25%; }
+  #player-section iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+
+  /* プレイヤー操作バー */
+    .player-controls {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: flex-end; /* 右寄せ */
+      gap: 10px;
+      padding: 8px 10px;
+      background: #000;
+    }
+
+    .player-wrapper { max-width: 1000px; margin: 0 auto; position: relative; padding-top: 56.25%; }
+    #player-section iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+
+    .control-btn {
+      background: transparent;
+      border: 1px solid var(--fuji-white);
+      color: var(--fuji-white);
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-family: 'Yuji Syuku', serif;
+      font-weight: 700;
+      font-size: 0.8em;
+      cursor: pointer;
+      transition: 0.2s;
+      letter-spacing: 1px;
+    }
+
+    .control-btn:hover {
+      background: var(--fuji-white);
+      color: #000;
+      }
+    #details-section {
+      background: var(--card-bg); padding: 20px; max-width: 1000px;
+      margin: 0 auto; display: none; border-bottom: 4px solid var(--main-red);
+    }
+    .detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; font-size: 0.9em; }
+    .detail-item b { color: var(--main-red); margin-right: 5px; }
+
+    /* セトリ */
+    .setlist-container { margin-top: 15px; background: var(--setlist-bg); padding: 10px; border-radius: 5px; }
+    .setlist-title { font-weight: bold; margin-bottom: 5px; color: #888; font-size: 0.8em; }
+    .setlist-item { padding: 5px 10px; cursor: pointer; font-size: 0.85em; border-radius: 3px; }
+    .setlist-item:hover { background: #333; color: var(--main-red); }
+    .setlist-item.active { background: var(--main-red); color: white; }
+
+    /* メインコンテンツ */
+    .content { padding: 20px; }
+    .search-container { max-width: 800px; margin: 20px auto; display: flex; gap: 10px; justify-content: center; }
+    #roleSelect, #searchInput { padding: 12px; border-radius: 5px; border: 1px solid var(--main-red); background: #333; color: white; }
+    #searchInput { flex: 1; }
+
+
+    /* 楽曲カード */
+    #song-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; max-width: 1200px; margin: 0 auto; }
+    .song-card { background: var(--card-bg); border-top: 4px solid var(--main-red); padding: 15px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+    .song-card:hover { transform: scale(1.02); background: #2d2d40; }
+    .card-title { font-size: 1.1em; font-weight: bold; color: var(--text-light); margin-bottom: 5px; }
+    .card-artist { font-size: 0.85em; color: #aaa; margin-bottom: 8px; }
+    .card-video-title { font-size: 0.75em; color: #88d1ff; text-decoration: underline; }
+    .vocal-badge { background: var(--main-red); color: white; padding: 2px 6px; font-size: 0.7em; border-radius: 3px; }
+
+    /* 弦月さん仕様のスクロールバー（Chrome/Edge/Safari用） */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--fuji-white); }
+    ::-webkit-scrollbar-thumb { background: var(--main-red); border-radius: 10px; }
+  </style>
+</head>
+<body>
+
+  <div id="player-section">
+    <div class="player-controls">
+      <button class="control-btn" onclick="openYouTube()">VIEW ON YOUTUBE</button>
+      <button class="control-btn" onclick="closePlayer()">×</button>
+    </div>
+    <div class="player-wrapper">
+      <div id="youtube-player"></div>
+    </div>
+  </div>
+
+  <div id="details-section">
+    <h2 id="view-song-name" style="margin-top:0; color:var(--accent-red);"></h2>
+    <div class="detail-grid" id="view-details"></div>
+    <div class="setlist-container" id="view-setlist"></div>
+  </div>
+
+  <div class="content">
+    <h1>弦楽曲非公式目録</h1>
+
+    <a href="<?= getAppUrl() ?>?p=about" class="about-link">🏮当サイトについて</a>
+
+    <div class="search-container">
+      <select id="roleSelect" onchange="filterSongs()">
+        <option value="all">すべてから検索</option>
+        <option value="2">アーティスト</option>
+        <option value="4">Vocal</option>
+        <option value="5">作詞</option>
+        <option value="6">作曲</option>
+        <option value="7">MIX</option>
+        <option value="10">演奏・コラボ</option>
+      </select>
+      <input type="text" id="searchInput" placeholder="曲名や動画タイトルで検索..." onkeyup="filterSongs()">
+    </div>
+
+    <div id="song-list">
+      <div class="loader">データを読み込み中...</div>
+    </div>
+  </div>
+
+  <script>
+    let allSongs = [];
+    let player;
+    let currentVideoUrl = "";
+    const tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    const firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    function onYouTubeIframeAPIReady() {
+      // プレイヤーの準備（最初は空）
+    }
+
+    window.onload = function() {
+    // google.script.run の代わりに fetch を使ってGASからデータを取得する
+    const gasUrl = "あなたのGASのデプロイURL";
+    
+    fetch(gasUrl)
+      .then(response => response.json())
+      .then(data => {
+        displaySongs(data); // 既存の表示用関数を呼び出す
+      })
+      .catch(err => console.error("データ取得エラー:", err));
+    };
+    function displaySongs(data) {
+      if (!data || data.length === 0) return;
+      allSongs = data;
+      const listContainer = document.getElementById('song-list');
+      listContainer.innerHTML = '';
+
+      data.forEach((row, index) => {
+        const card = document.createElement('div');
+        card.className = 'song-card';
+        card.onclick = () => selectSong(index);
+        card.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+             <span class="date" style="font-size:0.7em;">${row[0]}</span>
+             <span class="vocal-badge">${row[4] || '弦月藤士郎'}</span>
+          </div>
+          <div class="card-title">${row[1]}</div>
+          <div class="card-artist">${row[2] || '-'}</div>
+          <div class="card-video-title">🎥 ${row[11]}</div>
+        `;
+        listContainer.appendChild(card);
+      });
+    }
+
+    function selectSong(index) {
+      const row = allSongs[index];
+      currentVideoUrl = row[3]; // ★URLを保存
+      
+      const videoId = extractVideoId(currentVideoUrl);
+      const startTime = extractStartTime(currentVideoUrl);
+
+      document.getElementById('player-section').style.display = 'block';
+      document.getElementById('details-section').style.display = 'block';
+      window.scrollTo({top: 0, behavior: 'smooth'});
+
+      if (!player) {
+        player = new YT.Player('youtube-player', {
+          height: '100%', width: '100%', videoId: videoId,
+          playerVars: { 'start': startTime, 'autoplay': 1 },
+        });
+      } else {
+        player.loadVideoById({ videoId: videoId, startSeconds: startTime });
+      }
+      updateDetails(row, currentVideoUrl);
+    }
+
+    // ★プレイヤーを閉じる機能
+    function closePlayer() {
+      if (player) {
+        player.pauseVideo(); // 動画を止める
+      }
+      document.getElementById('player-section').style.display = 'none';
+      document.getElementById('details-section').style.display = 'none';
+    }
+
+    // ★YouTubeで開く機能
+    function openYouTube() {
+      if (currentVideoUrl) {
+        window.open(currentVideoUrl, '_blank');
+      }
+    }
+
+    function updateDetails(row, currentUrl) {
+      document.getElementById('view-song-name').innerText = row[1];
+      
+      const labels = [
+        {idx: 2, lab: "アーティスト"}, {idx: 4, lab: "ボーカル"}, 
+        {idx: 5, lab: "作詞"}, {idx: 6, lab: "作曲"}, 
+        {idx: 7, lab: "MIX"}, {idx: 8, lab: "Illust"}, 
+        {idx: 9, lab: "動画"}, {idx: 10, lab: "コラボ"}
+      ];
+      
+      let html = "";
+      labels.forEach(l => {
+        if(row[l.idx]) html += `<div class="detail-item"><b>${l.lab}:</b>${row[l.idx]}</div>`;
+      });
+      document.getElementById('view-details').innerHTML = html;
+
+      const sameVideoSongs = allSongs
+      .map((s, i) => ({...s, originalIndex: i})) // 元のインデックスを保持
+      .filter(s => extractVideoId(s[3]) === extractVideoId(currentUrl)) // 同じ動画の曲を抽出
+      .sort((a, b) => extractStartTime(a[3]) - extractStartTime(b[3])); // ★ここ！開始秒数で昇順ソート
+    
+      let setlistHtml = '<div class="setlist-title">この配信・動画のセットリスト（時系列順）</div>';
+      sameVideoSongs.forEach(s => {
+      const activeClass = s[1] === row[1] ? 'active' : '';
+      setlistHtml += `
+      <div class="setlist-item ${activeClass}" onclick="selectSong(${s.originalIndex})">
+        <span style="color:var(--accent-red); font-family:monospace; margin-right:8px;">
+          ${extractTimeLabel(s[3])}
+        </span> 
+        ${s[1]}
+      </div>`;
+  });
+  document.getElementById('view-setlist').innerHTML = sameVideoSongs.length > 1 ? setlistHtml : "";
+  }
+    // 補助関数
+    function extractVideoId(url) {
+      const match = String(url).match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
+      return match ? match[1] : "";
+    }
+
+    function extractStartTime(url) {
+      const t = String(url).match(/[?&]t=([0-9]+)s?/); // 秒指定
+      if (t) return parseInt(t[1]);
+      
+      const hms = String(url).match(/[?&]t=(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?/);
+      if (hms) {
+        const h = parseInt(hms[1] || 0);
+        const m = parseInt(hms[2] || 0);
+        const s = parseInt(hms[3] || 0);
+        return h * 3600 + m * 60 + s;
+      }
+      return 0;
+    }
+
+    function extractTimeLabel(url) {
+      const t = String(url).match(/[?&]t=([^&]+)/);
+      return t ? `[${t[1]}]` : "";
+    }
+
+    function filterSongs() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const roleIndex = document.getElementById('roleSelect').value;
+      const cards = document.getElementsByClassName('song-card');
+      
+      Array.from(cards).forEach((card, index) => {
+        const row = allSongs[index];
+        let targetText = roleIndex === "all" ? row.join(' ').toLowerCase() : String(row[roleIndex] || "").toLowerCase();
+        card.style.display = targetText.includes(query) ? '' : 'none';
+      });
+    }
+  </script>
+</body>
+</html>
